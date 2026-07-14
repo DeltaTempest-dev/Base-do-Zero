@@ -6,6 +6,7 @@ const moment = require("moment-timezone");
 
 const { downloadContentFromMessage, downloadMediaMessage, prepareWAMessageMedia,jidNormalizedUser, getContentType } = require("@whiskeysockets/baileys");
 
+const setting = JSON.parse(fs.readFileSync("./Base-config/dono.json"));
 
 // ===================== GET BUFFER =====================
 const getBuffer = async (url, options = {}) => {
@@ -55,5 +56,6 @@ downloadContentFromMessage,
 downloadMediaMessage, 
 prepareWAMessageMedia,
 jidNormalizedUser,
-getContentType
+getContentType,
+setting
 };

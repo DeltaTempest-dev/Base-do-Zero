@@ -10,7 +10,7 @@ API_KEY_TOKITO: "SUA-KEY"
 // substituindo "SUA-KEY" pela chave recebida.
 //
 // Exemplo:
-// API_KEY_TOKITO: "ADS6586"
+// API_KEY_TOKITO: "tokito_XXXXXXXXXXXXXXXX"
 //
 // O nome da variável pode ser alterado, porém, caso mude,
 // será necessário alterar também em todos os locais do código
@@ -48,6 +48,9 @@ API_KEY_TOKITO: "SUA-KEY"
 
 // O pagamento é automático e seguro. Assim que confirmado,
 // sua API Key ficará disponível para uso.
+
+
+//Caso de dúvidas ainda, chame um suporte +55 34 9811-9617 (Adrenis) ou entre no site e chama por lá mesmo.
 
 
 // ================= AVISO IMPORTANTE =================

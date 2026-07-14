@@ -34,6 +34,8 @@ return `┏°»｡ ∾･⁙･ ❤️ ➵ ⁘ ➵ ❤️ ･⁙･∾ ｡«°�
 ${readMore}
 ┏━━━𖤐༺✦༻𖤐━━━┓
 ┃❤️ ➤ ${prefix}reiniciar
+┃❤️ ➤ ${prefix}setprefix
+┃❤️ ➤ ${prefix}verkey
 ┗━━━𖤐༺✦༻𖤐━━━┛`;
 };
 

@@ -7,49 +7,71 @@ BASE NÃO TEM SUPORTE, ENTÃO DÊ SEUS PULOS.
 const { NumberDono, prefix, NickDono, NomeBot } = require("./Base-config/dono")
 const { Tokito_site, API_KEY_TOKITO } = require("./Base-config/apikey")
 
-const { fs, axios, moment, linguagem, mess, getBuffer, fetchJson, downloadContentFromMessage, downloadMediaMessage, prepareWAMessageMedia, jidNormalizedUser, getContentType } = require("./Base-config/exports")
+const { fs, axios, moment, linguagem, mess, getBuffer, fetchJson, downloadContentFromMessage, downloadMediaMessage, prepareWAMessageMedia, jidNormalizedUser, getContentType, setting } = require("./Base-config/exports")
 
 
-//=====FUNÇÕES AUXILIARES=====\\
+
+//=====FUNÇÕES AUXILIARES=====\\by: Adrenis Modz KKKKKKK 
 function normalizeJid(jid) {
-if (!jid) return null;
-let id = jid.replace(/:.*(?=@)/, '');
-if (id.endsWith('@lid')) {
-id = id.replace('@lid', '@s.whatsapp.net');
-} else if (!id.endsWith('@s.whatsapp.net')) {
-id = id + '@s.whatsapp.net';
+if (typeof jid !== "string") return null;
+
+let id = jid.replace(/:.*(?=@)/, "");
+
+if (id.endsWith("@lid")) {
+id = id.replace("@lid", "@s.whatsapp.net");
+} else if (!id.endsWith("@s.whatsapp.net")) {
+id += "@s.whatsapp.net";
 }
+
 return id;
 }
 
-function getGroupAdmins(participants) {
+// ===================== ADMINS DO GRUPO =====================
+function getGroupAdmins(participants = []) {
 return participants
-.filter(p => p.admin === "admin" || p.admin === "superadmin")
+.filter(p => p && (p.admin === "admin" || p.admin === "superadmin"))
 .map(p => {
-const jidReal =
-p.jid ||
-p.participantPn ||
-(p.participant.includes('@')
-? p.participant.split(':')[0] + '@s.whatsapp.net'
-: p.participant + '@s.whatsapp.net');
+let jidReal = null;
 
-return normalizeJid(jidReal);
-});
+if (typeof p.jid === "string") {  
+    jidReal = p.jid;  
+  } else if (typeof p.participantPn === "string") {  
+    jidReal = p.participantPn;  
+  } else if (typeof p.participant === "string") {  
+    const part = p.participant.split(":")[0];  
+    jidReal = part.endsWith("@s.whatsapp.net")  
+      ? part  
+      : part + "@s.whatsapp.net";  
+  }  
+
+  return normalizeJid(jidReal);  
+})  
+.filter(Boolean);
+
 }
 
-function getMembros(participants) {
+// ===================== MEMBROS DO GRUPO =====================
+function getMembros(participants = []) {
 return participants
-.filter(p => !p.admin)
+.filter(p => p && !p.admin)
 .map(p => {
-const jidReal =
-p.jid ||
-p.participantPn ||
-(p.participant.includes('@')
-? p.participant.split(':')[0] + '@s.whatsapp.net'
-: p.participant + '@s.whatsapp.net');
+let jidReal = null;
 
-return normalizeJid(jidReal);
-});
+if (typeof p.jid === "string") {  
+    jidReal = p.jid;  
+  } else if (typeof p.participantPn === "string") {  
+    jidReal = p.participantPn;  
+  } else if (typeof p.participant === "string") {  
+    const part = p.participant.split(":")[0];  
+    jidReal = part.endsWith("@s.whatsapp.net")  
+      ? part  
+      : part + "@s.whatsapp.net";  
+  }  
+
+  return normalizeJid(jidReal);  
+})  
+.filter(Boolean);
+
 }
 
 
@@ -60,24 +82,25 @@ try {
 const msg = m.messages?.[0];
 if (!msg) return;
 if (msg.key?.fromMe) return;
-
 const message =
 msg.message?.ephemeralMessage?.message ||
 msg.message?.viewOnceMessage?.message ||
 msg.message;
-
 if (!message) return;
-
 const info = m.messages?.[0];
 if (!info) return;
-
 const from = info.key?.remoteJid;
 if (!from) return;
-
+const pushname = info?.pushName || await base?.user?.name || "Usuário";
+const quoted = info.quoted ? info.quoted : info
 const isGroup = from.endsWith("@g.us")
-let sender = jidNormalizedUser(isGroup ? info?.key?.participantPn || info?.key?.senderPn || info?.key?.participant || info?.key?.remoteJidPn || info?.key?.remoteJid || base?.user?.id : info?.key?.senderPn || info?.key?.participantPn || info?.key?.participant || info?.key?.remoteJidPn || info?.key?.remoteJid || tokito?.user?.id)
-
-if (String(sender || "").includes("@lid")) sender = jidNormalizedUser(info?.key?.remoteJidAlt || info?.key?.senderAlt || info?.key?.participantAlt || base?.user?.id?.split(":")[0] + "@s.whatsapp.net" || sender)
+const sender = jidNormalizedUser(isGroup ? info?.key?.participantPn || 
+info?.key?.senderPn || 
+await base?.user?.id || 
+info?.key?.participant : info?.key?.senderPn || 
+info?.key?.participant ||
+info?.key?.remoteJid 
+);
 
 const senderNumber = sender.split('@')[0];
 
@@ -87,24 +110,24 @@ if (isGroup) {
 groupMetadata = await base.groupMetadata(from)
 }
 
-const normalizar = (alvo) => {
-if (!alvo) return ""
+function normalizar(alvo) {
+    if (!alvo) return "";
 
-if (alvo.includes("@lid") && groupMetadata?.participants) {
-const membro = groupMetadata.participants.find(v => v.lid === alvo)
-if (membro?.jid) return membro.jid
+    alvo = alvo.replace(/:.*(?=@)/, "");
+
+    if (alvo.endsWith("@lid")) {
+        return alvo.replace("@lid", "@s.whatsapp.net");
+    }
+
+    if (!alvo.includes("@")) {
+        return alvo + "@s.whatsapp.net";
+    }
+
+    return alvo;
 }
 
-if (alvo.includes("@lid")) {
-const num = alvo.split(":")[0].replace("@lid", "")
-return num + "@s.whatsapp.net"
-}
-
-return alvo
-}
-
-const jid = normalizar(sender || "")
-const numero = jid.replace(/@.+/g, "").replace(/[^0-9]/g, "")
+const jid = normalizeJid(sender);
+const numero = jid.replace(/@.+/, "");
 
 const reply = (text) => {
 return base.sendMessage(from, {
@@ -123,32 +146,18 @@ key: msg.key
 })
 }
 
-let pushname = "Usuário"
 
-try {
-if (isGroup) {
-const contato = groupMetadata.participants.find(
-p => normalizar(p.id) === jid
-)
-
-pushname =
-contato?.notify ||
-contato?.name ||
-msg.pushName ||
-numero
-
-} else {
-pushname =
-msg.pushName ||
-numero
-}
-} catch {
-pushname =
-msg.pushName ||
-numero
+if (isGroup && groupMetadata?.participants) {
+const contato = groupMetadata.participants.find(p => {
+const id = normalizeJid(
+p.id ||
+p.jid ||
+p.participant
+);
+return id === jid;
+});
 }
 
-//sistema dono
 
 //====SISTEMA DE DONO====\\
 const botNumber = jidNormalizedUser(base.user.id);
@@ -285,18 +294,19 @@ msg.message?.conversation ||
 msg.message?.extendedTextMessage?.text ||
 msg.message?.imageMessage?.caption ||
 msg.message?.videoMessage?.caption ||
-""
+"";
 
-const isCmd = body.startsWith(prefix)
+const prefix = setting.prefix;
+
+const isCmd = body.trim().startsWith(prefix);
 
 const args = isCmd
-? body.slice(prefix.length).trim().split(/ +/)
-: []
+  ? body.trim().slice(prefix.length).trim().split(/\s+/)
+  : [];
 
-const command =
-args.shift()?.toLowerCase() || ""
+const command = args.shift()?.toLowerCase() || "";
 
-const q = args.join(" ")
+const q = args.join(" ");
 
 
 const hora = moment().tz("America/Sao_Paulo").format("HH:mm:ss");
@@ -524,7 +534,7 @@ console.log(`
 `)
 }
 
-if (!isCmd) return
+
 
 console.log(`
 ╭━━━〔 ⚡ COMANDO EXECUTADO 〕━━━⬣
@@ -536,6 +546,12 @@ console.log(`
 ╰━━━━━━━━━━━━━━━━━━━━━━━━━━━━⬣
 `)
 
+
+if (body.trim().toLowerCase() === "prefixo") {
+    await reagir("❤️");
+    reply(`❤️ Meu prefixo é: *${prefix}*`);
+}
+if (!isCmd) return
 
 /*if (!from.endsWith('@g.us')) {
   return reply('❌ O bot funciona apenas em grupos.')}*/
@@ -555,6 +571,39 @@ process.exit(0)
 }
 break
 
+case 'prefixo-bot':
+case 'setprefix':
+if (args.length < 1) return;
+if (!SoDono) return reply("😠Hm só meu mestre que pode usar>.<💧")
+const novoPrefix = q.trim();
+setting.prefix = novoPrefix;
+fs.writeFileSync("./Base-config/dono.json", JSON.stringify(setting, null, 4));
+reply(`✔ Prefixo alterado para: *${novoPrefix}*`);
+break;
+
+case 'verkey':{
+if (!SoDono) return reply("😠Hm só meu mestre que pode usar>.<💧")
+await reagir("⏳");
+try {
+const { data } = await axios.get(
+`${Tokito_site}/api/status/key?apikey=${API_KEY_TOKITO}`,
+{ timeout: 10000 }
+);
+
+if (!data?.status) {
+await reagir(from, "❌");
+return reply(data?.mensagem || "Não foi possível consultar a key.");
+}
+const { requisicoes } = data;
+await reagir("✅");
+reply(`🧊 *TOKITO API'S*\n> 🟢 *Requisições disponíveis:* ${requisicoes.disponiveis}`);
+} catch (err) {
+console.error("[KEY]", err);
+await reagir(from, "❌");
+reply(`⚠️ ${err.response?.data?.mensagem || err.message}`);
+}
+}
+break;
 
 //comando de ADM 
 
@@ -778,15 +827,14 @@ break;
 
 case 'totalcmds':
 case 'totalcmd': {
-  try {
-    const codigo = fs.readFileSync(__filename, 'utf-8')
-    const matches = codigo.match(/case\s+'(.*?)'/g) || []
-    const unicos = new Set(matches.map(m => m.replace(/case\s+'|'/g, '')))
-    reply(`😎 Olá, ${pushname} >.<\n\n📊 Total de comandos: ${unicos.size}`)
-  } catch (e) {
-    console.log(e)
-    reply('❌ Erro ao contar os comandos.')
-  }
+try {
+const codigo = fs.readFileSync(__filename, 'utf8')
+const total = (codigo.match(/case\s+['"`][^'"`]+['"`]\s*:\s*\{/g) || []).length
+reply(`😎 Olá, ${pushname} >.<\n> 📊 Total de comandos: ${total}`)
+} catch (e) {
+console.log(e)
+reply('❌ Erro ao contar os comandos.')
+}
 }
 break
 
@@ -1029,18 +1077,18 @@ return reply('❌ | Música não encontrada.')
 
 let musica = data.resultado
 
-let card = `${Tokito_site}/canvas/spotify?title=${encodeURIComponent(musica.title || 'Spotify')}&artist=${encodeURIComponent(musica.artist || 'Desconhecido')}&duration=${encodeURIComponent(musica.duration || '0:00')}&thumbnail=${encodeURIComponent(musica.thumbnail || '')}&popularity=${encodeURIComponent(musica.popularity || 0)}&album=${encodeURIComponent(musica.album || 'Desconhecido')}&release_at=${encodeURIComponent(musica.release_date || musica.release_at || 'Desconhecido')}&url=${encodeURIComponent(musica.url || '')}&download_url=${encodeURIComponent(musica.download_url || '')}&apikey=${API_KEY_TOKITO}`
+let card = `${Tokito_site}/canvas/spotify?title=${encodeURIComponent(musica.titulo)}&artist=${encodeURIComponent(musica.artista)}&duration=${encodeURIComponent(musica.duracao)}&thumbnail=${encodeURIComponent(musica.capa)}&popularity=${encodeURIComponent(musica.popularidade)}&album=${encodeURIComponent(musica.album)}&release_at=${encodeURIComponent(musica.release_at)}&url=${encodeURIComponent(musica.link)}&download_url=${encodeURIComponent(musica.download_url)}&apikey=${API_KEY_TOKITO}`
 
 let caption = `🎧 *MÚSICA SPOTIFY*
 ━━━━━━━━━━━━━━━━━━━
-- *🎞️ | ᴛɪ́ᴛᴜʟᴏ:* ${musica.title || 'Desconhecido'}
-- *👤 | ᴀʀᴛɪꜱᴛᴀ:* ${musica.artist || 'Desconhecido'}
+- *🎞️ | ᴛɪ́ᴛᴜʟᴏ:* ${musica.titulo || 'Desconhecido'}
+- *👤 | ᴀʀᴛɪꜱᴛᴀ:* ${musica.artista || 'Desconhecido'}
 - *💽 | ᴀ́ʟʙᴜᴍ:* ${musica.album || 'Desconhecido'}
-- *⏱️ | ᴅᴜʀᴀᴄ̧ᴀ̃ᴏ:* ${musica.duration || '0:00'}
-- *🔥 | ᴘᴏᴘᴜʟᴀʀɪᴅᴀᴅᴇ:* ${musica.popularity || 0}
+- *⏱️ | ᴅᴜʀᴀᴄ̧ᴀ̃ᴏ:* ${musica.duracao || '0:00'}
+- *🔥 | ᴘᴏᴘᴜʟᴀʀɪᴅᴀᴅᴇ:* ${musica.popularidade || 0}
 - *📅 | ʟᴀɴᴄ̧ᴀᴍᴇɴᴛᴏ:* ${musica.release_date || musica.release_at || 'Desconhecido'}
 ━━━━━━━━━━━━━━━━━━━
-🔗 *Spotify:* ${musica.url || 'Indisponível'}`
+🔗 *Spotify:* ${musica.link || 'Indisponível'}`
 
 await base.sendMessage(from, {
 image: { url: card },
@@ -1083,12 +1131,12 @@ return reply("❌ | Música não encontrada.")
 
 let musica = data.resultado
 
-let canvas = `${Tokito_site}/canvas/soundcloud?title=${encodeURIComponent(musica.title || 'SoundCloud')}&artist=${encodeURIComponent(musica.artist || 'SoundCloud Artist')}&duration=${encodeURIComponent('1:21')}&thumbnail=${encodeURIComponent(musica.image || '')}&album=${encodeURIComponent('SoundCloud Music')}&release_at=${encodeURIComponent('Tokito APIs')}&url=${encodeURIComponent(musica.url || '')}&audio=${encodeURIComponent(musica.audio || '')}&apikey=${API_KEY_TOKITO}`
+let canvas = `${Tokito_site}/canvas/soundcloud?title=${encodeURIComponent(musica.titulo || 'SoundCloud')}&artist=${encodeURIComponent(musica.autor || 'Desconhecido')}&duration=${encodeURIComponent(musica.duracao || '00:00')}&thumbnail=${encodeURIComponent(musica.imagem || '')}&album=${encodeURIComponent(musica.genero || 'SoundCloud')}&release_at=${encodeURIComponent(musica.publicado || 'Desconhecido')}&url=${encodeURIComponent(musica.url || '')}&audio=${encodeURIComponent(musica.audio || '')}&apikey=${API_KEY_TOKITO}`
 
 let caption = `🎧 *MÚSICA SOUNDCLOUD*
 ━━━━━━━━━━━━━━━━━━━
-- *🎞️ | ᴛɪ́ᴛᴜʟᴏ:* ${musica.title || "Desconhecido"}
-- *👤 | ᴀʀᴛɪꜱᴛᴀ:* ${musica.artist || "Desconhecido"}
+- *🎞️ | ᴛɪ́ᴛᴜʟᴏ:* ${musica.titulo || "Desconhecido"}
+- *👤 | ᴀʀᴛɪꜱᴛᴀ:* ${musica.autor || "Desconhecido"}
 - *💽 | ꜰᴏʀᴍᴀᴛᴏ:* ${musica.ext || "mp3"}
 - *🌐 | ꜱᴇʀᴠɪᴄ̧ᴏ:* SoundCloud
 - *📥 | ᴛɪᴘᴏ:* Áudio MP3
@@ -1111,7 +1159,7 @@ await reagir("✅")
 
 } catch (e) {
 console.log('[SOUNDCLOUD ERRO]', e)
-await reagir(from, "❌")
+await reagir("❌")
 return reply("❌ | Música não encontrada.")
 }
 }
@@ -1219,6 +1267,7 @@ break;
 
 default: {
       if (!isCmd) return;
+      
 
       await reagir("❌");
 
