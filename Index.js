@@ -178,8 +178,6 @@ const groupAdmins = isGroup ? getGroupAdmins(groupMembers) : [];
 
 const somembros = isGroup ? getMembros(groupMembers) : [];
 
-
-// ─── PASTA E CACHE DE GRUPOS ──────────────────────
 const pastaGrupo = "./Base-config/Groups/activated_groups";
 
 if (!fs.existsSync(pastaGrupo)) {
@@ -258,7 +256,6 @@ fs.writeFileSync(dirGroup, JSON.stringify(index, null, 2) + '\n')}
 function setNes(index){
 fs.writeFileSync(nescj, JSON.stringify(index, null, 2) + '\n')}
 
-// ====== LER DADOS DO GRUPO ======
 let dataGp = []
 
 if (isGroup && fs.existsSync(dirGroup)) {
@@ -524,26 +521,26 @@ else if (isReaction) tipoMsg = "REAÇÃO"
 // ===================== LOG =====================
 if (isGroup) {
 console.log(`
-╭━━━〔 📩 MENSAGEM DE GRUPO 〕━━━⬣
+╭━━━〔 📩 MENSAGEM DE GRUPO 〕━━━
 ┃ 👤 Nome     : ${pushname}
 ┃ 📱 Número   : ${numero}
 ┃ 👥 Grupo    : ${groupMetadata?.subject || "Desconhecido"}
 ┃ 📦 Tipo     : ${tipoMsg}
 ┃ 💬 Texto    : ${body || "Sem texto"}
-╰━━━━━━━━━━━━━━━━━━━━━━━━━━⬣
+╰━━━━━━━━━━━━━━━━━━━━━━━━━━
 `)
 }
 
 
 
 console.log(`
-╭━━━〔 ⚡ COMANDO EXECUTADO 〕━━━⬣
+╭━━━〔 ⚡ COMANDO EXECUTADO 〕━━━
 ┃ 👤 Nome      : ${pushname}
 ┃ 📱 Número    : ${numero}
 ┃ ⚙️ Comando   : ${prefix + command}
 ┃ 📦 Tipo      : ${tipoMsg}
 ┃ 👥 Local     : ${isGroup ? groupMetadata?.subject : "Privado"}
-╰━━━━━━━━━━━━━━━━━━━━━━━━━━━━⬣
+╰━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 `)
 
 

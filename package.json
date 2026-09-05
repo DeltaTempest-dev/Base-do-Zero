@@ -1,7 +1,7 @@
 {
   "name": "base",
   "version": "1.0.0",
-  "description": "",
+  "description": "Criada por DEV|Adrenis </> para iniciantes",
   "main": "connect.js",
   "scripts": {
     "start": "bash start.sh"

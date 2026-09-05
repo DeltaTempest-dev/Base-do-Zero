@@ -8,7 +8,6 @@ const { downloadContentFromMessage, downloadMediaMessage, prepareWAMessageMedia,
 
 const setting = JSON.parse(fs.readFileSync("./Base-config/dono.json"));
 
-// ===================== GET BUFFER =====================
 const getBuffer = async (url, options = {}) => {
   try {
     const res = await axios({
@@ -32,7 +31,6 @@ const getBuffer = async (url, options = {}) => {
   }
 };
 
-// ===================== FETCH JSON =====================
 async function fetchJson(url, options = {}) {
   try {
     const res = await fetch(url, options);

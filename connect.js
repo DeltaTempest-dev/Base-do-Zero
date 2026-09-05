@@ -54,7 +54,7 @@ console.log(`
 `)
 
 const sock = makeWASocket({
-version,
+version: [2, 3000, 1042650569],
 auth: state,
 printQRInTerminal: false,
 logger: pino({ level: "silent" }),
